@@ -1,0 +1,9 @@
+- name: 上传脚本
+  copy: 
+    src: agent_install.sh
+    dest: /tmp/agent_install.sh
+    owner: root
+    group: root
+    mode: preserve
+- name: 执行安装
+  shell: cd /tmp && ./agent_install.sh

@@ -1,0 +1,8 @@
+- name: 1.上传安装包(apache-tomcat)
+  copy: src=apache-tomcat-{{ tomcat_version }}.tar.gz dest=/usr/local/src owner=root group=root mode=0644
+- name: 2.解压包
+  unarchive: src=/usr/local/src/apache-tomcat-{{ tomcat_version }}.tar.gz dest=/usr/local/ copy=no mode=0755
+- name: 3.重命名安装目录
+  shell: mv /usr/local/apache-tomcat-{{ tomcat_version }} /usr/local/tomcat
+- name: 4.启动tomcat服务
+  shell: nohup /usr/local/tomcat/bin/startup.sh &

@@ -1,0 +1,91 @@
+user  nobody;
+worker_processes  auto;
+#worker_cpu_affinity 0001 0010 0100 1000;
+worker_rlimit_nofile 65535;
+#error_log  logs/error.log;
+#error_log  logs/error.log  notice;
+#error_log  logs/error.log  info;
+
+pid        logs/nginx.pid;
+
+
+events {
+    use epoll;
+    worker_connections  2048;
+    multi_accept on;
+    accept_mutex on;
+}
+
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+
+    #log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+    #                  '$status $body_bytes_sent "$http_referer" '
+    #                  '"$http_user_agent" "$http_x_forwarded_for"';
+
+    log_format main '$remote_addr - $http_x_forwarded_for,'
+        '{"@timestamp":"$time_iso8601",'
+        '"host":"$server_addr",'
+        '"remote_user":"$remote_user",'
+        '"clientip":"$remote_addr",'
+        '"request":"$request",'
+        '"status":$status,'
+        '"size":$body_bytes_sent,'
+        '"referer":"$http_referer",'
+        '"agent":"$http_user_agent",'
+        '"xff":"$http_x_forwarded_for",'
+        '"responsetime":$request_time,'
+        '"upstreamhost":"$upstream_addr",'
+        '"upstreamtime":$upstream_response_time,'
+        '"url":"$uri",'
+        '"domain":"$host"}';    
+    
+    access_log  logs/access.log  main;
+    
+    server_tokens off;
+    sendfile on;
+    tcp_nopush on;
+    tcp_nodelay on;
+    client_header_buffer_size 4k;
+
+    keepalive_timeout 60;
+    gzip on;
+    gzip_min_length 1k;
+    gzip_buffers 4 16k;
+    gzip_types text/plain application/x-javascript text/css application/xml;
+    gzip_comp_level 3;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_connect_timeout 30s;
+    proxy_read_timeout 30s;
+    proxy_send_timeout 30s;
+    include vhost/*.conf;
+    
+    server {
+        listen       80;
+        server_name  localhost;
+
+        #charset koi8-r;
+
+        #access_log  logs/host.access.log  main;
+
+        location / {
+            root   html;
+            index  index.html index.htm;
+        }
+     
+        location /nginx_status {
+            stub_status on;
+            allow 127.0.0.1;
+            deny all;            
+            access_log off;
+        }
+       
+        location = /50x.html {
+            root   html;
+        }
+        }
+}

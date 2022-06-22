@@ -1,0 +1,3 @@
+- hosts: zy
+  roles:
+  - install_nginx_1.14

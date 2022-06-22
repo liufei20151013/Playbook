@@ -1,0 +1,18 @@
+- name: 创建目录
+  file:
+    path: /usr/local/ps-agent
+    owner: root
+    group: root
+    mode: '0644'
+    state: directory
+- name: 上传文件 
+  copy:
+    src: ps-agent
+    dest: /usr/local/ps-agent/ps-agent
+    mode: preserve
+- name: 设置开机启动
+  lineinfile:
+    path: /etc/rc.d/rc.local
+    line: 'nohup /usr/local/ps-agent/ps-agent 1>/usr/local/ps-agent/ps-agent.log 2>&1 &'
+- name: 启动ps-agent
+  shell: nohup /usr/local/ps-agent/ps-agent 1>/usr/local/ps-agent/ps-agent.log 2>&1 & 

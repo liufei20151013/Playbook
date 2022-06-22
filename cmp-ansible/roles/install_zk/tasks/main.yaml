@@ -1,0 +1,19 @@
+- name: copy zookeeper-3.4.10.tar.gz
+  copy: src=zookeeper-{{ zk_version }}.tar.gz dest=/data
+- name: Uncompression tar.gz
+  unarchive: src=/data/zookeeper-{{ zk_version }}.tar.gz dest=/data copy=no mode=0755
+- name: copy zoo.conf
+  template: src=zoo.cfg.j2 dest=/data/zookeeper-{{ zk_version }}/conf/zoo.cfg
+- name: create data,logs
+  shell: mkdir -p /data/zookeeper-{{ zk_version }}/{data,logs}
+- name: create server1 myid
+  shell: echo "1" > /data/zookeeper-{{ zk_version }}/data/myid
+  when: ansible_default_ipv4.address == '"{{ server1 }}"'
+- name: create server2 myid
+  shell: echo "2" > /data/zookeeper-{{ zk_version }}/data/myid
+  when: ansible_default_ipv4.address == '"{{ server2 }}"'
+- name: create server3 myid
+  shell: echo "3" > /data/zookeeper-{{ zk_version }}/data/myid
+  when: ansible_default_ipv4.address == '"{{ server3 }}"'
+- name: start zk
+  shell: /data/zookeeper-{{ zk_version }}/bin/zkServer.sh start

@@ -1,0 +1,6 @@
+#- hosts: "{{ host }}"
+- hosts: 10.236.192.24
+  become: yes
+  become_method: sudo
+  roles:
+  - install_zk

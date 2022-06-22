@@ -1,0 +1,10 @@
+- name: scp jdk1.8 
+  copy: src=jdk-8u192-linux-x64.tar.gz dest=/usr/local/src/ owner=root group=root mode=0755
+- name: install jdk1.8
+  shell: cd /usr/local/src && tar zxvf /usr/local/src/jdk-8u192-linux-x64.tar.gz -C ../
+- name: rename directory
+  shell: mv /usr/local/jdk1.8.0_192 /usr/local/jdk1.8
+
+- name: copy profile file
+  copy: src=java.sh dest=/etc/profile.d/java.sh mode=644
+  tags: profile

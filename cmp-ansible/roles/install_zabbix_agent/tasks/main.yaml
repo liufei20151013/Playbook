@@ -1,0 +1,89 @@
+- name: 1. 安装Zabbix Agent(CentOS Release 7)
+  yum:
+    name: "{{ packages }}"
+    state: installed
+  vars:
+    packages:
+    - zabbix40
+    - zabbix40-agent
+    - sysstat
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "7"
+
+- name: 1.1 安装Zabbix Agent依赖包(CentOS Release 6)
+  yum:
+    name: "{{ packages }}"
+    state: installed
+  vars:
+    packages:
+    - unixODBC
+    - sysstat
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "6"
+
+- name: 1.2 上传rpm包(CentOS Release 6)
+  copy: src=zabbix-agent-3.0.0-2.el6.x86_64.rpm  dest=/tmp/zabbix-agent-3.0.0-2.el6.x86_64.rpm owner=root group=root mode=0644
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "6"
+
+- name: 1.3 安装Zabbix Agent(CentOS Release 6)
+  shell: cd /tmp && rpm -i zabbix-agent-3.0.0-2.el6.x86_64.rpm
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "6"
+
+- name: 1. 安装Zabbix Agent(ubuntu)
+  apt: 
+    force_apt_get: yes
+    name: "{{ packages }}"
+    update_cache: yes
+    state: present
+  vars:
+    packages:
+    - zabbix-agent
+    - sysstat
+  when:
+    - ansible_distribution == "Ubuntu"
+
+- name: 2. 覆盖CentOS7配置文件(zabbix-agentd.conf)
+  template: src=zabbix_agentd.j2 dest=/etc/zabbix_agentd.conf owner=root group=root mode=0644
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "7"
+
+- name: 2. 覆盖CentOS6配置文件(zabbix-agentd.conf)
+  template: src=zabbix_agentd.j2 dest=/etc/zabbix/zabbix_agentd.conf owner=root group=root mode=0644
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "6"
+
+- name: 2. 覆盖Ubuntu配置文件(zabbix-agentd.conf)
+  template: src=zabbix_agentd_ubuntu.j2 dest=/etc/zabbix/zabbix_agentd.conf owner=root group=root mode=0644
+  when:
+    - ansible_distribution == "Ubuntu"
+
+- name: 3. 拷贝scripts脚本目录
+  copy: src=/etc/ansible/roles/install_zabbix_agent/files/scripts dest=/etc/zabbix/ mode=preserve
+
+- name: 4.1 创建pid目录(centos6)
+  file: path=/run/zabbix state=directory
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "6"
+
+- name: 4.2 创建pid文件(centos6) 
+  file: path=/run/zabbix/zabbix_agentd.pid state=touch mode=0664 owner=zabbix group=zabbix
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "6"
+
+- name: 4.3 为pid文件授权(centos6) 
+  file: path=/run/zabbix owner=zabbix group=zabbix recurse=yes
+  when:
+    - ansible_distribution == "CentOS"
+    - ansible_distribution_major_version == "6"
+- name: 5. 启动Zabbix Agent
+  service: name=zabbix-agent state=restarted enabled=yes

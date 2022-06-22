@@ -1,0 +1,5 @@
+duankou: 6379
+redis_version: 4.0.2
+maxmemory: 15032385536
+master_ip: 
+slave_ip: 

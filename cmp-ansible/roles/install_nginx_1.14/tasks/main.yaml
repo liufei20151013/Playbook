@@ -1,0 +1,31 @@
+- name: 1.上传安装包(Nginx)
+  copy: src=nginx-{{ nginx_version }}.tar.gz dest=/usr/local/src
+- name: 2.安装依赖包
+  yum:
+    name: "{{ packages }}"
+    state: installed
+  vars:
+    packages:
+    - gcc
+    - gcc-c++
+    - make 
+    - pcre
+    - pcre-devel
+    - zlib
+    - zlib-devel
+    - openssl
+    - openssl-devel
+    - gd-devel
+    - unzip
+    - patch
+- name: 3.解压安装包
+  unarchive: src=/usr/local/src/nginx-{{ nginx_version }}.tar.gz dest=/usr/local/src copy=no mode=0755
+- name: 4.编译并安装
+  shell: cd /usr/local/src/nginx-{{ nginx_version }} && ./configure --prefix=/usr/local/nginx --with-http_realip_module --with-http_stub_status_module --with-http_ssl_module --with-http_gzip_static_module --with-http_v2_module --with-http_dav_module --with-http_flv_module --with-http_image_filter_module && make && make install
+- name: 5.覆盖配置文件(nginx.conf)
+  template: src=nginx.conf.j2 dest=/usr/local/nginx/conf/nginx.conf
+- name: 6.创建软连接
+  file: src=/usr/local/nginx/sbin/nginx dest=/usr/bin/nginx state=link
+- name: 7.启动Nginx
+  shell: nginx
+

@@ -1,0 +1,28 @@
+- name: 1.安装基础包
+  yum:
+    name: "{{ packages }}"
+    state: installed
+  vars:
+    packages:
+    - gcc
+    - make
+- name: 2.上传安装包(redis.tar.gz}
+  copy: src=redis-{{ redis_version }}.tar.gz dest=/usr/local/src
+- name: 3.解压安装包
+  unarchive: src=/usr/local/src/redis-{{ redis_version }}.tar.gz dest=/usr/local/src copy=no mode=0755
+- name: 4.编译安装
+  shell: cd /usr/local/src/redis-{{ redis_version }} && make PREFIX=/usr/local/redis install
+- name: 5.修改环境变量
+  shell: /bin/echo {{ item }} >> /etc/profile && source /etc/profile
+  with_items:
+    - export PATH=\$PATH:/usr/local/redis/bin
+- name: 6.替换配置文件(redis.conf)
+  template: src=redis.conf.j2 dest=/usr/local/redis/redis_{{ duankou }}.conf
+- name: 7.替换配置文件中的master_ip
+  shell: sed -i 's/^# slaveof.*/slaveof {{ master_ip }} {{ duankou }}/' /usr/local/redis/redis_{{ duankou }}.conf
+  when: ansible_default_ipv4.address == '"{{ slave_ip }}"'
+- name: 8.打开slave aof
+  shell: sed -i 's/^appendonly.*/appendonly yes/' /usr/local/redis/redis_{{ duankou }}.conf
+  when: ansible_default_ipv4.address == '"{{ slave_ip }}"'
+- name: 9.启动Redis 
+  shell: /usr/local/redis/bin/redis-server /usr/local/redis/redis_{{ duankou }}.conf
